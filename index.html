@@ -16,7 +16,7 @@
 <body>
 
 <h2>Last opp rapport til Prosam</h2>
-<div id="auth-section">
+<div id="auth-section" style="display:none">
   <button id="loginBtn">Sign in with ArcGIS</button>
 </div>
 
@@ -59,8 +59,11 @@
 
     // Check if already signed in
     IdentityManager.checkSignInStatus(ORG_URL + "/sharing")
-      .then(credential => showUploadUI(credential))
-      .catch(() => {});
+  .then(credential => showUploadUI(credential))
+  .catch(() => {
+    // Only show login button if no session found
+    document.getElementById("auth-section").style.display = "block";
+  });
 
     document.getElementById("loginBtn").addEventListener("click", () => {
       IdentityManager.getCredential(ORG_URL + "/sharing")
