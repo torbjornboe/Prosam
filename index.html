@@ -121,7 +121,7 @@
         const result = await response.json();
 
         if (result.success) {
-          status.textContent = `✅ Uploaded! Item ID: ${result.id}`;
+          status.textContent = `✅ Uploaded! Item url: https://prosam.maps.arcgis.com/home/item.html?id=${result.id}`;
         } else {
           status.textContent = `❌ Error: ${result.error?.message || "Unknown error"}`;
         }
