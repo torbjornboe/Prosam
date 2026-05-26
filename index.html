@@ -77,9 +77,9 @@
 });
 
     document.getElementById("loginBtn").addEventListener("click", () => {
-      IdentityManager.getCredential(ORG_URL + "/sharing")
-        .then(credential => showUploadUI(credential));
-    });
+  const authUrl = `${ORG_URL}/sharing/rest/oauth2/authorize?client_id=${CLIENT_ID}&response_type=token&expiration=20160&redirect_uri=${encodeURIComponent("https://torbjornboe.github.io/Prosam/oauth-callback.html")}`;
+  window.open(authUrl, "oauth-popup", "width=600,height=500");
+});
 
     function showUploadUI(credential) {
       token = credential.token;
