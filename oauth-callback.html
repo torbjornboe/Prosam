@@ -10,15 +10,16 @@
       try {
         IdentityManager.completeOAuth20();
       } catch(e) {
-        // Fallback: manually post token back to parent window
-        const urlParams = new URLSearchParams(window.location.search);
-        const hash = window.location.hash;
         if (window.opener) {
           window.opener.postMessage(
-            { type: "arcgis:auth:success", search: window.location.search, hash: hash },
+            {
+              type: "arcgis:auth:success",
+              search: window.location.search,
+              hash: window.location.hash
+            },
             "https://torbjornboe.github.io"
           );
-          window.close();
+          setTimeout(() => window.close(), 500);
         }
       }
     });
