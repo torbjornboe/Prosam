@@ -2,27 +2,21 @@
 <html>
 <head>
   <meta charset="UTF-8" />
-  <script src="https://js.arcgis.com/4.29/"></script>
 </head>
 <body>
   <script>
-    require(["esri/identity/IdentityManager"], function(IdentityManager) {
-      try {
-        IdentityManager.completeOAuth20();
-      } catch(e) {
-        if (window.opener) {
-          window.opener.postMessage(
-            {
-              type: "arcgis:auth:success",
-              search: window.location.search,
-              hash: window.location.hash
-            },
-            "https://torbjornboe.github.io"
-          );
-          setTimeout(() => window.close(), 500);
-        }
-      }
-    });
+    // Token comes back in the URL hash as #access_token=...
+    const params = new URLSearchParams(window.location.hash.substring(1));
+    const token = params.get("access_token");
+    const expires = params.get("expires_in");
+
+    if (token && window.opener) {
+      window.opener.postMessage(
+        { type: "arcgis:auth:success", token: token, expires: expires },
+        "https://torbjornboe.github.io"
+      );
+      window.close();
+    }
   </script>
 </body>
 </html>
