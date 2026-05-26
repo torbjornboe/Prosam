@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Upload to ArcGIS</title>
+  <script src="https://js.arcgis.com/4.29/"></script>
+  <link rel="stylesheet" href="https://js.arcgis.com/4.29/esri/themes/light/main.css" />
+  <style>
+    body { font-family: sans-serif; max-width: 500px; margin: 60px auto; padding: 0 20px; }
+    input, button, select { display: block; margin: 12px 0; width: 100%; padding: 8px; font-size: 1rem; }
+    button { background: #0079c1; color: white; border: none; cursor: pointer; border-radius: 4px; }
+    button:disabled { background: #aaa; }
+    #status { margin-top: 16px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<h2>Upload to My Content</h2>
+<div id="auth-section">
+  <button id="loginBtn">Sign in with ArcGIS</button>
+</div>
+
+<div id="upload-section" style="display:none">
+  <p>Signed in as: <strong id="username"></strong></p>
+  <label>Item Title</label>
+  <input type="text" id="itemTitle" placeholder="My uploaded file" />
+  <label>File</label>
+  <input type="file" id="fileInput" />
+  <label>Item Type</label>
+  <select id="itemType">
+    <option value="PDF">PDF</option>
+    <option value="CSV">CSV</option>
+    <option value="Microsoft Excel">Excel</option>
+    <option value="Image">Image</option>
+    <option value="Document Link">Other</option>
+  </select>
+  <button id="uploadBtn">Upload to My Content</button>
+  <div id="status"></div>
+</div>
+
+<script>
+  require([
+    "esri/identity/OAuthInfo",
+    "esri/identity/IdentityManager"
+  ], function(OAuthInfo, IdentityManager) {
+
+    const ORG_URL = "https://prosam.maps.arcgis.com/"; // <- change this
+    const CLIENT_ID = "XcDxw3v6p0TgdeVD";               // <- change this
+
+    const info = new OAuthInfo({
+      appId: CLIENT_ID,
+      portalUrl: ORG_URL,
+      popup: false
+    });
+    IdentityManager.registerOAuthInfos([info]);
+
+    let currentUser = null;
+    let token = null;
+
+    // Check if already signed in
+    IdentityManager.checkSignInStatus(ORG_URL + "/sharing")
+      .then(credential => showUploadUI(credential))
+      .catch(() => {});
+
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      IdentityManager.getCredential(ORG_URL + "/sharing")
+        .then(credential => showUploadUI(credential));
+    });
+
+    function showUploadUI(credential) {
+      token = credential.token;
+      currentUser = credential.userId;
+      document.getElementById("auth-section").style.display = "none";
+      document.getElementById("upload-section").style.display = "block";
+      document.getElementById("username").textContent = currentUser;
+    }
+
+    document.getElementById("uploadBtn").addEventListener("click", async () => {
+      const file = document.getElementById("fileInput").files[0];
+      const title = document.getElementById("itemTitle").value || file?.name || "Uploaded Item";
+      const type = document.getElementById("itemType").value;
+      const status = document.getElementById("status");
+
+      if (!file) { status.textContent = "Please select a file."; return; }
+
+      status.textContent = "Uploading...";
+      document.getElementById("uploadBtn").disabled = true;
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("title", title);
+        formData.append("type", type);
+        formData.append("f", "json");
+        formData.append("token", token);
+
+        const response = await fetch(
+          `${ORG_URL}/sharing/rest/content/users/${currentUser}/addItem`,
+          { method: "POST", body: formData }
+        );
+        const result = await response.json();
+
+        if (result.success) {
+          status.textContent = `✅ Uploaded! Item ID: ${result.id}`;
+        } else {
+          status.textContent = `❌ Error: ${result.error?.message || "Unknown error"}`;
+        }
+      } catch (err) {
+        status.textContent = `❌ Request failed: ${err.message}`;
+      }
+
+      document.getElementById("uploadBtn").disabled = false;
+    });
+
+  });
+</script>
+</body>
+</html>
