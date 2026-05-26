@@ -48,12 +48,10 @@
     const CLIENT_ID = "XcDxw3v6p0TgdeVD";               // <- change this
 
     const info = new OAuthInfo({
-      appId: CLIENT_ID,
-      portalUrl: ORG_URL,
-      popup: true,
-      flowType: "auto",
-      popupCallbackUrl: "https://torbjornboe.github.io/Prosam/oauth-callback.html"
-    });
+  appId: CLIENT_ID,
+  portalUrl: ORG_URL,
+  popup: false
+});
     IdentityManager.registerOAuthInfos([info]);
 
     let currentUser = null;
@@ -70,9 +68,17 @@
   window.addEventListener("message", function(event) {
   if (event.origin !== "https://torbjornboe.github.io") return;
   if (event.data.type === "arcgis:auth:success") {
-    IdentityManager.checkSignInStatus(ORG_URL + "/sharing")
-      .then(credential => showUploadUI(credential))
-      .catch(e => console.error("Still not signed in:", e));
+    const credential = {
+      token: event.data.token,
+      userId: null
+    };
+    // Fetch username with the token
+    fetch(`${ORG_URL}/sharing/rest/community/self?f=json&token=${event.data.token}`)
+      .then(r => r.json())
+      .then(user => {
+        credential.userId = user.username;
+        showUploadUI(credential);
+      });
   }
 });
 
