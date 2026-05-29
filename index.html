@@ -124,27 +124,41 @@
         if (result.success) {
   const itemUrl = `https://prosam.maps.arcgis.com/home/item.html?id=${result.id}`;
   status.innerHTML = `
-    ✅ Opplastet! URL til rapportskjema:
-    <br>
-    <a href="${itemUrl}" target="_blank">${itemUrl}</a>
-    <button id="copyBtn" style="margin-left:8px; padding:4px 10px; cursor:pointer; font-size:0.85rem; border-radius:4px; border:1px solid #0079c1; background:white; color:#0079c1;">
-      📋 Kopier
-    </button>
-  `;
-  document.getElementById("copyBtn").addEventListener("click", () => {
+  ✅ Opplastet! URL til rapportskjema:
+  <br>
+  <a href="${itemUrl}" target="_blank">${itemUrl}</a>
+  <button id="copyBtn" style="margin-left:8px; padding:4px 10px; cursor:pointer; font-size:0.85rem; border-radius:4px; border:1px solid #0079c1; background:white; color:#0079c1;">
+    📋 Kopier
+  </button>
+`;
+document.getElementById("copyBtn").addEventListener("click", () => {
+  try {
     navigator.clipboard.writeText(itemUrl)
       .then(() => document.getElementById("copyBtn").textContent = "✅ Kopiert!")
-      .catch(() => document.getElementById("copyBtn").textContent = "❌ Feil");
-  });
-        } else {
-          status.textContent = `❌ Error: ${result.error?.message || "Unknown error"}`;
-        }
-      } catch (err) {
-        status.textContent = `❌ Request failed: ${err.message}`;
-      }
-
-      document.getElementById("uploadBtn").disabled = false;
-    });
+      .catch(() => {
+        const el = document.createElement("textarea");
+        el.value = itemUrl;
+        el.style.position = "fixed";
+        el.style.opacity = "0";
+        document.body.appendChild(el);
+        el.focus();
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+        document.getElementById("copyBtn").textContent = "✅ Kopiert!";
+      });
+  } catch (err) {
+    document.getElementById("copyBtn").textContent = "❌ Feil";
+  }
+});
+} else {
+  status.textContent = `❌ Error: ${result.error?.message || "Unknown error"}`;
+}
+} catch (err) {
+  status.textContent = `❌ Request failed: ${err.message}`;
+}
+document.getElementById("uploadBtn").disabled = false;
+});
 
   });
 </script>
